@@ -1,8 +1,6 @@
 package org.example;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -10,7 +8,7 @@ import java.util.List;
 import java.util.TimeZone;
 
 public class EpochConverter {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         String fileName = "src/main/resources/restarts.txt";
 
         List<Long> epochTimes = readEpochTimesFromFile(fileName);
@@ -24,6 +22,11 @@ public class EpochConverter {
         sdf.setTimeZone(TimeZone.getTimeZone("GMT")); // Set time zone to GMT
         System.out.println("\nHuman Readable Times in GMT:");
         epochTimes.stream().sorted().forEach(epochTime -> System.out.println(sdf.format(new Date(epochTime * 1000))));
+        System.out.println("Number of restarts in total since start of monitoring: " + epochTimes.size());
+
+        List<String> csv = new ArrayList<>();
+        epochTimes.stream().sorted().forEach(epochTime -> csv.add(sdf.format(new Date(epochTime * 1000))));
+        writeToCSV(csv, "restarts_readable.csv");
     }
 
     public static List<Long> readEpochTimesFromFile(String fileName) {
@@ -47,5 +50,17 @@ public class EpochConverter {
         }
 
         return epochTimes;
+    }
+
+    private static void writeToCSV(List<String> priorityDtos, String filename) throws IOException {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filename))) {
+            // Writing header
+            writer.write("Restart dates\n");
+
+            // Writing data
+            for (String priorityDto : priorityDtos) {
+                writer.write(priorityDto + "\n");
+            }
+        }
     }
 }
